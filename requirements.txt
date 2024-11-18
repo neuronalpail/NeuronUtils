@@ -1,0 +1,10 @@
+colorama
+find-libpython
+neuron
+numpy
+packaging
+poetry-semver
+poetry2conda
+setuptools
+toml
+tqdm

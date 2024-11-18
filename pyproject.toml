@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "neuronutils"
+version = "0.1.0"
+description = ""
+authors = ["Ohki_KIRI-MtBay <git@neuronalpail.com>"]
+license = "Apache License Version 2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+neuron = "^8.2.6"
+tqdm = "^4.67.0"
+poetry2conda = "^0.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry2conda]
+name = "neuronutils"
