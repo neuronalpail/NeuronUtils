@@ -64,7 +64,7 @@ class ProgressManager:
         """
         self.pc.barrier()
         if not self.pc.gid_exists(self.rank):
-            self.pc.gid2node(self.rank, self.rank)
+            self.pc.set_gid2node(self.rank, self.rank)
         h.load_file("stdrun.hoc")
         h.tstop = tstop
         if self.rank == 0:
@@ -151,7 +151,6 @@ if __name__ == "__main__":
             iclamp.dur = 900  # ms
             iclamp.amp = i / 100  # nA
             stim.append(iclamp)
-            pm.pc.set_gid2node(i, pm.pc.id())
 
         # Preparation of recording
         t = h.Vector().record(h._ref_t)
