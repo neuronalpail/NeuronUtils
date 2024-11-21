@@ -103,9 +103,9 @@ class ProgressManager:
         """
         Wrapper for execution: initialise, run, and finalise.
         """
-        pm.initialise(tstop=tstop, v=v, maxstep=maxstep, desc=desc)
-        pm.run(tstop=tstop)
-        pm.finalise()
+        self.initialise(tstop=tstop, v=v, maxstep=maxstep, desc=desc)
+        self.run(tstop=tstop)
+        self.finalise()
 
     def quit(self):
         """
@@ -169,4 +169,4 @@ if __name__ == "__main__":
         # Results of recording
         if pm.pc.id() == 0:
             print(f"{time.time() - t0:11.6f} s")
-            print(f"t = {h.t:.1f} ms, v = {soma.v:.1f} mV")
+            print(f"t = {h.t:.1f} ms, v = {somatae[0].v:.1f} mV")
