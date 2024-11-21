@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # Modify/update requirements.txt for pip and environment.yaml for conda with latest Poetry environment
 
 # For pip, requirements.txt
-poetry export --without-hashes -f requirements.txt > tmp
-sed -e "s/==.*$//g" tmp > requirements.txt
-rm tmp
+poetry export --without-hashes -f requirements.txt > requirements.txt
+sed -i -e "s/==.*$//g" requirements.txt
 
 # For conda, envirnment.yaml
 poetry2conda pyproject.toml environment.yaml
+sed -i -e '/^#\s\+date:.*$/d' environment.yaml
+
