@@ -23,7 +23,7 @@ from tqdm.auto import tqdm
 
 
 class ProgressManager:
-    def __init__(self, pc=None, tstop=None):
+    def __init__(self, pc=None, tstop=None, tstep=1.0):
         """
         Initialise ProgressManager object
         """
@@ -33,7 +33,7 @@ class ProgressManager:
         self.pc = pc
         self.rank = self.pc.id()
         self.size = self.pc.nhost()
-        self.t_prev = 0
+        self.tstep = tstep  # ms, simulation time per update
         self.fih = h.FInitializeHandler(2, self.update)
         self.pc.barrier()
 
@@ -41,17 +41,16 @@ class ProgressManager:
         """
         Progress bar update
         """
-        if self.pc.id() == 0:
+        if self.rank == 0:
             tnow = np.round(h.t, 4)
-            self.pbar.update(np.round(tnow - self.t_prev, 4))
-            h.CVode().event(np.round(h.t + h.dt, 4), self.update)
-            self.t_prev = tnow
+            self.pbar.update(np.round(tnow - self.pbar.n, 4))
+            h.CVode().event(np.round(h.t + self.tstep, 4), self.update)
 
     def refresh(self, total=None, desc=None):
         """
         Refresh progress bar. Max steps and/or description can also be modified.
         """
-        if self.pc.id() == 0:
+        if self.rank == 0:
             if total is not None:
                 self.pbar.total = total
             if desc is not None:
@@ -64,9 +63,11 @@ class ProgressManager:
         Initialise NEURON simulation. Execute before pm.run().
         """
         self.pc.barrier()
+        if not self.pc.gid_exists(self.rank):
+            self.pc.gid2node(self.rank, self.rank)
         h.load_file("stdrun.hoc")
         h.tstop = tstop
-        if self.pc.id() == 0:
+        if self.rank == 0:
             self.pbar = tqdm(
                 bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
                 total=tstop,
@@ -95,7 +96,7 @@ class ProgressManager:
         Finalise NEURON simulation. Execute after pm.run().
         """
         self.pc.barrier()
-        if self.pc.id() == 0:
+        if self.rank == 0:
             self.pbar.close()
         self.pc.barrier()
 
@@ -129,7 +130,7 @@ class ProgressManager:
         """Context manager exit point."""
         if exc_type is not None:
             print(f"Exception occurred: {exc_value}")
-        if self.pc.id() == 0 and hasattr(self, "pbar"):
+        if self.rank == 0 and hasattr(self, "pbar"):
             self.pbar.close()
         self.pc.barrier()
         if self.close_script:
@@ -169,4 +170,6 @@ if __name__ == "__main__":
         # Results of recording
         if pm.pc.id() == 0:
             print(f"{time.time() - t0:11.6f} s")
-            print(f"t = {h.t:.1f} ms, v = {somatae[0].v:.1f} mV")
+            x = np.vstack([t, v[0], v[1]]).T
+            x = np.round(x[:: np.round(1 / h.dt).astype(int)], 1)
+            print(x[-25:])
