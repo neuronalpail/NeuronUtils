@@ -24,7 +24,7 @@ from tqdm.auto import tqdm
 
 
 class ProgressManager:
-    def __init__(self, pc=None, tstop=1.0, tstep=1.0):
+    def __init__(self, pc=None, tstop=1.0, tstep=1.0, pstep=None):
         """
         Initialise ProgressManager object
         """
@@ -37,6 +37,10 @@ class ProgressManager:
         self.tstop = tstop  # ms, total simulation time
         self.tstep = tstep  # ms, simulation time per update
         self.fih = h.FInitializeHandler(2, self.update)
+        if pstep is None:
+            self.pstep = tstep  # ms, same as time step
+        else:
+            self.pstep = pstep  # ms, updating time for progress bar
         self.pc.barrier()
 
     def update(self):
@@ -46,7 +50,7 @@ class ProgressManager:
         if self.rank == 0:
             tnow = np.round(h.t, 4)
             self.pbar.update(np.round(tnow - self.pbar.n, 4))
-            h.CVode().event(np.round(h.t + self.tstep, 4), self.update)
+            h.CVode().event(np.round(h.t + self.pstep, 4), self.update)
 
     def refresh(self, total=None, desc=None):
         """
