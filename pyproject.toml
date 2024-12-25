@@ -11,6 +11,8 @@ python = "^3.11"
 neuron = "^8.2.6"
 tqdm = "^4.67.0"
 poetry2conda = "^0.3.0"
+isort = "^5.13.2"
+black = "^24.10.0"
 
 
 [build-system]

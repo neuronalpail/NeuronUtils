@@ -24,7 +24,7 @@ from tqdm.auto import tqdm
 
 
 class ProgressManager:
-    def __init__(self, pc=None, tstop=None, tstep=1.0):
+    def __init__(self, pc=None, tstop=1.0, tstep=1.0):
         """
         Initialise ProgressManager object
         """
@@ -34,6 +34,7 @@ class ProgressManager:
         self.pc = pc
         self.rank = self.pc.id()
         self.size = self.pc.nhost()
+        self.tstop = tstop  # ms, total simulation time
         self.tstep = tstep  # ms, simulation time per update
         self.fih = h.FInitializeHandler(2, self.update)
         self.pc.barrier()
@@ -59,7 +60,7 @@ class ProgressManager:
             self.pbar.refresh()
         self.pc.barrier()
 
-    def initialise(self, tstop=1, v=-65, maxstep=None, desc=None):
+    def initialise(self, tstop=None, v=None, maxstep=None, desc=None):
         """
         Initialise NEURON simulation. Execute before pm.run().
         """
@@ -67,14 +68,21 @@ class ProgressManager:
         if not self.pc.gid_exists(self.rank):
             self.pc.set_gid2node(self.rank, self.rank)
         h.load_file("stdrun.hoc")
-        h.tstop = tstop
+        if tstop is None:
+            h.tstop = self.tstop
+        else:
+            h.tstop = tstop
+            self.tstop = tstop
         if self.rank == 0:
             self.pbar = tqdm(
                 bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
-                total=tstop,
+                total=h.tstop,
                 desc=desc,
             )
-        h.finitialize(v)
+        if v is None:
+            h.finitialize()
+        else:
+            h.finitialize(v)
         if maxstep is None:
             self.pc.set_maxstep(1)
         else:
@@ -101,7 +109,7 @@ class ProgressManager:
             self.pbar.close()
         self.pc.barrier()
 
-    def execute(self, tstop=1, v=-65, maxstep=None, desc=None):
+    def execute(self, tstop=None, v=None, maxstep=None, desc=None):
         """
         Wrapper for execution: initialise, run, and finalise.
         """
@@ -140,7 +148,7 @@ class ProgressManager:
 
 
 if __name__ == "__main__":
-    with ProgressManager() as pm:
+    with ProgressManager(tstop=1000) as pm:
         # Preparation of cells
         N = 10000
         somatae = [h.Section(name=f"soma[{i}]") for i in range(pm.rank, N, pm.size)]
@@ -165,11 +173,12 @@ if __name__ == "__main__":
         t0 = time.time()
 
         # Simulation
-        pm.execute(1000)
+        pm.execute()
 
         # Results of recording
         if pm.pc.id() == 0:
             print(f"{time.time() - t0:11.6f} s")
             x = np.vstack([t, v[0], v[1]]).T
             x = np.round(x[:: np.round(1 / h.dt).astype(int)], 1)
-            print(x[-25:])
+            print(x[:10])
+            print(x[-10:])
