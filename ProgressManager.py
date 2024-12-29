@@ -87,6 +87,7 @@ class ProgressManager:
             h.finitialize()
         else:
             h.finitialize(v)
+        h.fcurrent()
         if maxstep is None:
             self.pc.set_maxstep(1)
         else:
