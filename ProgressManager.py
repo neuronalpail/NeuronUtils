@@ -41,6 +41,8 @@ class ProgressManager:
             self.pstep = tstep  # ms, same as time step
         else:
             self.pstep = pstep  # ms, updating time for progress bar
+        self.cvode = h.CVode()
+        self.cvode.active(False)  # Disable variable time step
         self.pc.barrier()
 
     def update(self):
@@ -50,7 +52,7 @@ class ProgressManager:
         if self.rank == 0:
             tnow = np.round(h.t, 4)
             self.pbar.update(np.round(tnow - self.pbar.n, 4))
-            h.CVode().event(np.round(h.t + self.pstep, 4), self.update)
+            self.cvode.event(np.round(h.t + self.pstep, 4), self.update)
 
     def refresh(self, total=None, desc=None):
         """
@@ -64,11 +66,12 @@ class ProgressManager:
             self.pbar.refresh()
         self.pc.barrier()
 
-    def initialise(self, tstop=None, v=None, maxstep=None, desc=None):
+    def initialise(self, tstop=None, v=None, secondorder=2, maxstep=None, desc=None):
         """
         Initialise NEURON simulation. Execute before pm.run().
         """
         self.pc.barrier()
+        h.secondorder = secondorder
         if not self.pc.gid_exists(self.rank):
             self.pc.set_gid2node(self.rank, self.rank)
         h.load_file("stdrun.hoc")
@@ -77,6 +80,7 @@ class ProgressManager:
         else:
             h.tstop = tstop
             self.tstop = tstop
+        h.dt = self.tstep
         if self.rank == 0:
             self.pbar = tqdm(
                 bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
