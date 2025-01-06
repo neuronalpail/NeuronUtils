@@ -24,7 +24,7 @@ from tqdm.auto import tqdm
 
 
 class ProgressManager:
-    def __init__(self, pc=None, tstop=1.0, tstep=1.0, pstep=None):
+    def __init__(self, pc=None, tstop=1.0, tstep=1.0, secondorder=2, pstep=None):
         """
         Initialise ProgressManager object
         """
@@ -43,6 +43,7 @@ class ProgressManager:
             self.pstep = pstep  # ms, updating time for progress bar
         self.cvode = h.CVode()
         self.cvode.active(False)  # Disable variable time step
+        h.secondorder = secondorder
         self.pc.barrier()
 
     def update(self):
@@ -66,12 +67,13 @@ class ProgressManager:
             self.pbar.refresh()
         self.pc.barrier()
 
-    def initialise(self, tstop=None, v=None, secondorder=2, maxstep=None, desc=None):
+    def initialise(self, tstop=None, v=None, secondorder=None, maxstep=None, desc=None):
         """
         Initialise NEURON simulation. Execute before pm.run().
         """
         self.pc.barrier()
-        h.secondorder = secondorder
+        if secondorder is not None:
+            h.secondorder = secondorder
         if not self.pc.gid_exists(self.rank):
             self.pc.set_gid2node(self.rank, self.rank)
         h.load_file("stdrun.hoc")
@@ -118,11 +120,13 @@ class ProgressManager:
             self.pbar.close()
         self.pc.barrier()
 
-    def execute(self, tstop=None, v=None, maxstep=None, desc=None):
+    def execute(self, tstop=None, v=None, secondorder=None, maxstep=None, desc=None):
         """
         Wrapper for execution: initialise, run, and finalise.
         """
-        self.initialise(tstop=tstop, v=v, maxstep=maxstep, desc=desc)
+        self.initialise(
+            tstop=tstop, v=v, secondorder=secondorder, maxstep=maxstep, desc=desc
+        )
         self.run(tstop=tstop)
         self.finalise()
 
