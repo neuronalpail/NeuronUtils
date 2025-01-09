@@ -166,3 +166,5 @@ poetry.lock
 
 # uv
 uv.lock
+.python-version
+
