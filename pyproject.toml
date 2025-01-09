@@ -1,24 +1,12 @@
-[tool.poetry]
+[project]
 name = "neuronutils"
 version = "0.1.0"
-description = ""
-authors = ["Ohki_KIRI-MtBay <git@neuronalpail.com>"]
-license = "Apache License Version 2.0"
+description = "The Purkinje cell model originally implemented by De Schutter and Bower (1994)."
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.11"
-neuron = "^8.2.6"
-tqdm = "^4.67.0"
-poetry2conda = "^0.3.0"
-isort = "^5.13.2"
-black = "^24.10.0"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-
-[tool.poetry2conda]
-name = "neuronutils"
+requires-python = ">=3.7,<3.13"
+dependencies = [
+    "black>=23.3.0",
+    "isort>=5.11.5",
+    "neuron>=8.2.6",
+    "tqdm>=4.67.1",
+]
