@@ -88,6 +88,7 @@ class ProgressManager:
                 bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
                 total=h.tstop,
                 desc=desc,
+                ascii=True,
             )
         if v is None:
             h.finitialize()
