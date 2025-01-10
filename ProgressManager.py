@@ -16,11 +16,93 @@ with ProgressManager() as pm:
 
 """
 
+import sys
 import time
 
 import numpy as np
 from neuron import h
 from tqdm.auto import tqdm
+
+
+class altpbar:
+    """
+    Alternative progression bar for the environment that tqdm does not work (`not sys.stdout.isatty()`).
+    This class is generated with ChatGPT 4o.
+    """
+
+    def __init__(self, total, desc=None):
+        """
+        Initialize an alternative progress bar.
+
+        Parameters:
+        total (int): Total number of steps.
+        desc (str): Description of the progress bar.
+        """
+        self.total = total
+        self.desc = f"{desc}: " if desc else ""
+        self.n = 0
+        self.start_time = time.time()
+        self.width = len(str(total))
+
+    def update(self, step=1):
+        """
+        Update the progress bar by a given step.
+
+        Parameters:
+        step (int): Number of steps to increment. Default is 1.
+        """
+        self.n += step
+        elapsed_time = time.time() - self.start_time
+
+        # Estimated remaining time
+        if self.n > 0:
+            rate = elapsed_time / self.n
+            eta = rate * (self.total - self.n)
+            rate_fmt = f"{1 / rate:.2f} it/s"
+        else:
+            eta = float("inf")
+            rate_fmt = "N/A"
+
+        elapsed_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+        eta_str = (
+            time.strftime("%H:%M:%S", time.gmtime(eta)) if eta < float("inf") else "?"
+        )
+
+        # Format current and total to match width with space padding
+        current = str(self.n).rjust(self.width)
+        total = str(self.total).rjust(self.width)
+
+        # Print progress
+        print(
+            f"{self.desc}{current}/{total} ({self.n / self.total:6.2%}) [{elapsed_str}<{eta_str}, {rate_fmt}]",
+            flush=True,
+            file=sys.stderr,
+        )
+
+    def refresh(self, total=None, desc=None):
+        """
+        Refresh the total steps or description.
+
+        Parameters:
+        total (int): New total steps. Optional.
+        desc (str): New description. Optional.
+        """
+        if total is not None:
+            self.total = total
+            self.width = len(str(total))
+        if desc is not None:
+            self.desc = desc
+
+    def close(self):
+        """
+        Finalize the progress bar.
+        """
+        elapsed_time = time.time() - self.start_time
+        elapsed_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+        print(
+            f"{self.desc}Completed {str(self.n).rjust(self.width)}/{str(self.total).rjust(self.width)} in {elapsed_str}.",
+            flush=True,
+        )
 
 
 class ProgressManager:
@@ -36,7 +118,7 @@ class ProgressManager:
         self.size = self.pc.nhost()
         self.tstop = tstop  # ms, total simulation time
         self.tstep = tstep  # ms, simulation time per update
-        self.fih = h.FInitializeHandler(2, self.update)
+        # self.fih = h.FInitializeHandler(2, self.update) # Avoid double schedule
         if pstep is None:
             self.pstep = tstep  # ms, same as time step
         else:
@@ -84,13 +166,14 @@ class ProgressManager:
             self.tstop = tstop
         h.dt = self.tstep
         if self.rank == 0:
-            self.pbar = tqdm(
-                bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
-                total=h.tstop,
-                desc=desc,
-                ascii=True,
-                dynamic_ncols=False,
-            )
+            if sys.stdout.isatty():
+                self.pbar = altpbar(total=h.tstop, desc=desc)
+            else:
+                self.pbar = tqdm(
+                    bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
+                    total=h.tstop,
+                    desc=desc,
+                )
         if v is None:
             h.finitialize()
         else:
