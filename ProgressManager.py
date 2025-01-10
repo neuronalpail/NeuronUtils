@@ -89,6 +89,7 @@ class ProgressManager:
                 total=h.tstop,
                 desc=desc,
                 ascii=True,
+                dynamic_ncols=False,
             )
         if v is None:
             h.finitialize()
