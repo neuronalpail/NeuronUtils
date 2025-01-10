@@ -167,13 +167,13 @@ class ProgressManager:
         h.dt = self.tstep
         if self.rank == 0:
             if sys.stdout.isatty():
-                self.pbar = altpbar(total=h.tstop, desc=desc)
-            else:
                 self.pbar = tqdm(
                     bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
                     total=h.tstop,
                     desc=desc,
                 )
+            else:
+                self.pbar = altpbar(total=h.tstop, desc=desc)
         if v is None:
             h.finitialize()
         else:
