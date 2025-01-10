@@ -166,7 +166,7 @@ class ProgressManager:
             self.tstop = tstop
         h.dt = self.tstep
         if self.rank == 0:
-            if sys.stdout.isatty():
+            if sys.stderr.isatty():
                 self.pbar = tqdm(
                     bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
                     total=h.tstop,
