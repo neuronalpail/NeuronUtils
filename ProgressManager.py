@@ -114,6 +114,7 @@ class ProgressManager:
             h.nrnmpi_init()
             pc = h.ParallelContext()
         self.pc = pc
+        self.pc.timeout(0)
         self.rank = self.pc.id()
         self.size = self.pc.nhost()
         self.tstop = tstop  # ms, total simulation time
@@ -196,7 +197,6 @@ class ProgressManager:
             h.tstop = tstop
             self.refresh(total=tstop)
         self.pc.psolve(h.tstop)
-        print(f"{self.rank}th thread is completed.")
 
     def finalise(self):
         """
