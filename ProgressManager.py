@@ -135,7 +135,9 @@ class ProgressManager:
         if self.rank == 0:
             tnow = np.round(h.t, 4)
             self.pbar.update(np.round(tnow - self.pbar.n, 4))
-            self.cvode.event(np.round(h.t + self.pstep, 4), self.update)
+            tnext = np.round(h.t + self.pstep, 4)
+            if tnext <= h.tstop:
+                self.cvode.event(tnext, self.update)
 
     def refresh(self, total=None, desc=None):
         """
@@ -190,11 +192,10 @@ class ProgressManager:
         """
         Execute NEURON simulation.
         """
-        if tstop is None or tstop == h.tstop:
-            self.pc.psolve(h.tstop)
-        else:
+        if tstop is not None and tstop != h.tstop:
+            h.tstop = tstop
             self.refresh(total=tstop)
-            self.pc.psolve(tstop)
+        self.pc.psolve(h.tstop)
         print(f"{self.rank}th thread is completed.")
 
     def finalise(self):
