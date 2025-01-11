@@ -74,7 +74,7 @@ class altpbar:
 
         # Print progress
         print(
-            f"{self.desc}{current}/{total} ({self.n / self.total:6.2%}) [{elapsed_str}<{eta_str}, {rate_fmt}]",
+            f"{self.desc}{current}/{total} ({self.n / self.total:7.2%}) [{elapsed_str}<{eta_str}, {rate_fmt}]",
             flush=True,
             file=sys.stderr,
         )
@@ -195,6 +195,7 @@ class ProgressManager:
         else:
             self.refresh(total=tstop)
             self.pc.psolve(tstop)
+        print(f"{self.rank}th thread is completed.")
 
     def finalise(self):
         """
