@@ -106,7 +106,9 @@ class altpbar:
 
 
 class ProgressManager:
-    def __init__(self, pc=None, tstop=1.0, tstep=1.0, secondorder=2, pstep=None):
+    def __init__(
+        self, pc=None, tstop=1.0, tstep=1.0, secondorder=2, pstep=None, server=False
+    ):
         """
         Initialise ProgressManager object
         """
@@ -124,6 +126,7 @@ class ProgressManager:
             self.pstep = tstep  # ms, same as time step
         else:
             self.pstep = pstep  # ms, updating time for progress bar
+        self.server = server
         self.cvode = h.CVode()
         self.cvode.active(False)  # Disable variable time step
         h.secondorder = secondorder
@@ -176,8 +179,10 @@ class ProgressManager:
             h.tstop = tstop
             self.tstop = tstop
         h.dt = self.tstep
+        if self.server != server:
+            self.server = server
         if self.rank == 0:
-            if server:
+            if self.server:
                 self.pbar = altpbar(total=h.tstop, desc=desc)
             else:
                 self.pbar = tqdm(
