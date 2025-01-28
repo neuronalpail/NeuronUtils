@@ -152,7 +152,15 @@ class ProgressManager:
             self.pbar.refresh()
         self.pc.barrier()
 
-    def initialise(self, tstop=None, v=None, secondorder=None, maxstep=None, desc=None):
+    def initialise(
+        self,
+        tstop=None,
+        v=None,
+        secondorder=None,
+        maxstep=None,
+        server=False,
+        desc=None,
+    ):
         """
         Initialise NEURON simulation. Execute before pm.run().
         """
@@ -169,14 +177,14 @@ class ProgressManager:
             self.tstop = tstop
         h.dt = self.tstep
         if self.rank == 0:
-            if sys.stderr.isatty():
+            if server:
+                self.pbar = altpbar(total=h.tstop, desc=desc)
+            else:
                 self.pbar = tqdm(
                     bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
                     total=h.tstop,
                     desc=desc,
                 )
-            else:
-                self.pbar = altpbar(total=h.tstop, desc=desc)
         if v is None:
             h.finitialize()
         else:
