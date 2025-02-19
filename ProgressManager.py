@@ -160,7 +160,7 @@ class ProgressManager:
         v=None,
         secondorder=None,
         maxstep=None,
-        server=False,
+        server=None,
         desc=None,
     ):
         """
@@ -178,7 +178,7 @@ class ProgressManager:
             h.tstop = tstop
             self.tstop = tstop
         h.dt = self.tstep
-        if self.server != server:
+        if server is not None and self.server != server:
             self.server = server
         if self.rank == 0:
             if self.server:
