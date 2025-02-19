@@ -76,7 +76,6 @@ class altpbar:
         print(
             f"{self.desc}{current}/{total} ({self.n / self.total:7.2%}) [{elapsed_str}<{eta_str}, {rate_fmt}]",
             flush=True,
-            file=sys.stderr,
         )
 
     def refresh(self, total=None, desc=None):
@@ -183,8 +182,10 @@ class ProgressManager:
             self.server = server
         if self.rank == 0:
             if self.server:
+                print("Server mode")
                 self.pbar = altpbar(total=h.tstop, desc=desc)
             else:
+                print("Console mode")
                 self.pbar = tqdm(
                     bar_format="{l_bar}{bar}| {n_fmt:.05}/{total_fmt} [{elapsed}<{remaining}, {postfix}{rate_fmt}]",
                     total=h.tstop,
